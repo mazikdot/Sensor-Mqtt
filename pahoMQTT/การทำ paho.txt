@@ -1,0 +1,6 @@
+sudo apt update
+sudo apt install mosquitto
+
+sudo mosquitto_passwd -c /etc/mosquitto/passwd mad3
+พาส 0836530374
+sudo vi /etc/mosquitto/conf.d/default.conf
