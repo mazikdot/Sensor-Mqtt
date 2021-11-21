@@ -1,6 +1,5 @@
 #include <FirebaseESP8266.h>
 #include <ESP8266WiFi.h>
-
 #define WIFI_SSID "ASDQWEOJJ" 
 #define WIFI_PASSWORD "mazikdot"
 
@@ -19,6 +18,7 @@ bool state = false;
 unsigned long period = 2000; 
 unsigned long last_time_light = 0; 
 unsigned long last_time = 0; 
+int pump = D0;
 int analogPin = A0;
 DHT dht(DHTPIN, DHTTYPE);
 //NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 3600 * 7);
@@ -28,30 +28,37 @@ unsigned long epochTime = 0;
 float h,t,f,hif,hic;
 int LED_LUK = D7;
 int LED_GAS = D8;
+unsigned long water_time;
 int val = 0;
 uint16_t lux = 0;
 bool StateGas = false;
 unsigned long time_ledGas;
 #include <BH1750FVI.h>
+unsigned long CM;
+unsigned long GetCM;
 BH1750FVI LightSensor(BH1750FVI::k_DevModeContLowRes);
 void setup() {
     connectWifi();
     Firebase.begin(FIREBASE_HOST, FIREBASE_KEY);
     pinMode(LED_LUK, OUTPUT);
     pinMode(LED_GAS, OUTPUT);
+    pinMode(pump, OUTPUT);
     dht.begin();
     LightSensor.begin();
 }
 
 void loop() {
 //------------Start time------------------------------------
-  val = analogRead(analogPin);
-  timeClient.update();
-  epochTime = timeClient.getEpochTime();
-  String Time = timeClient.getFormattedTime();
-  String date = String(year(epochTime)) + "-"  + String(month(epochTime)) + "-" + String(day(epochTime));
-  String date_time = date + " " + Time;
-  ledGas();
+   val = analogRead(analogPin);
+    ledGas();
+   if(h < 80.00){
+     digitalWrite(pump,1);
+     GetCM = CM;
+   }
+   else
+   {
+     digitalWrite(pump,0);
+   }
    if(lux < 10 ){
       
       digitalWrite(LED_LUK,1);
@@ -63,19 +70,24 @@ void loop() {
     if (val > 200) { // สามารถกำหนดปรับค่าได้ตามสถานที่ต่างๆ
     
     StateGas = true;
-    
+ 
   }
   else {
-     digitalWrite(LED_GAS, 0); // สั่งให้ LED ดับ
      StateGas = false;
+     digitalWrite(LED_GAS,0);
   }
- 
-  //Serial.println(date_time);
 //  ------------End time-------------------
    if( millis() - last_time > period) {
-    
-  last_time = millis(); //เซฟเวลาปัจจุบันไว้เพื่อรอจนกว่า millis() จะมากกว่าตัวมันเท่า period 
+   
+  last_time = millis(); 
+   timeClient.update();
+  epochTime = timeClient.getEpochTime();
+  String Time = timeClient.getFormattedTime();
+  String date = String(year(epochTime)) + "-"  + String(month(epochTime)) + "-" + String(day(epochTime));
+  String date_time = date + " " + Time;
+  
    h = dht.readHumidity();
+   
    t = dht.readTemperature();
    f = dht.readTemperature(true);
    hif = dht.computeHeatIndex(f, h);
@@ -109,12 +121,6 @@ void loop() {
   } else {
     Serial.println("Error : " + firebaseData.errorReason());
   }
-//  if((Firebase.setFloat(firebaseData, "/dataShow/Humiduty", h))     &&  (Firebase.setFloat(firebaseData, "/dataShow/TemperatureC", t)) && (Firebase.setInt(firebaseData, "/dataShow/Light", lux)) && (Firebase.setInt(firebaseData, "/dataShow/Gas", val))  ) {
-//        Serial.println("Added"); 
-//    } else {
-//        Serial.println("Error : " + firebaseData.errorReason());
-//    }
-//  
  }
 //  -------------------- End Firebase--------------------------------
     if( millis() - last_time_light > 1000) {
@@ -144,7 +150,7 @@ void connectWifi() {
     Serial.println(WiFi.localIP());
 }
 void ledGas(){
-   if( millis() - time_ledGas > 100 && StateGas == true) {
+   if( millis() - time_ledGas > 300 &&  StateGas == true) {
      time_ledGas = millis(); 
      Serial.println("แก๊สเกิน สัญญาณเตือนดัง !!!");
      digitalWrite(LED_GAS,!digitalRead(LED_GAS));
