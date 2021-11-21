@@ -1,0 +1,194 @@
+<html>
+  <head>
+    <!-- Chartjs -->
+    <title>IoT Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+    <script src="utils.js"></script>
+    <style>
+      canvas {
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+      }
+    </style>
+    <link rel="stylesheet" href="box.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">โปรเจคโรงงานอุตสหกรรม</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                   
+                    <button class="btn btn-primary"> <a class="nav-link active" aria-current="page" href="DataSensorLast.html" style="color:white;">ข้อมูล อุณภูมิ ความชื้น แสง แก๊ส</a></button>
+                  </li>
+                  <li class="nav-item">
+                    <button class="btn btn-success"> <a class="nav-link active" aria-current="page" href="Project.html" style="color:white;">กราฟ อุณหภูมิ ความชื้น (Line Chart)</a></button>
+                  </li>
+                  <li class="nav-item">
+                    <button class="btn btn-danger"> <a class="nav-link active" aria-current="page" href="Light.html" style="color:white;">กราฟของแสง (Line Chart)</a></button>
+                  </li>
+                  <li class="nav-item">
+                    <button class="btn btn-warning"> <a class="nav-link active" aria-current="page" href="Gas.html" style="color:white;">กราฟของแก๊ส (Line Chart)</a></button>
+                  </li>
+              </ul>
+          <form class="d-flex">
+            <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-success" type="submit">Search</button>
+          </form>
+        </div>
+      </div>
+    </nav>
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-12">
+         
+            <div class="card">
+              <div class="card-content">
+                <h5 class="text-center">
+                  ข้อมูลล่าสุดจาก Sensor
+                  <p id ="timeData">เวลา : </p>
+                </h5>
+              </div>
+              <div class="row gutters-sm">
+              
+                <div class="col-sm-6 mb-3">
+                  <div class="text-center">
+                    <h4>ข้อมูล อุณหภูมิ</h4>
+                    <h5 class="text-center"></h5>
+                    <div class="box box7">
+                      <h3 id="dataTemp"></h3>
+                  </div>
+                </div>
+                </div>
+                <div class="col-sm-6 mb-3">
+                  <div class="text-center">
+                    <h4>ข้อมูล ความชื้น</h4>
+                    <h5 class="text-center"></h5>
+                    <div class="box box4">
+                  <h3 id="dataHumiduty"></h3>
+                  </div>
+                </div>
+                </div>
+
+               
+              </div>
+              <div class="row gutters-sm">
+              
+                <div class="col-sm-6 mb-3">
+                  <div class="text-center">
+                    <h4>ข้อมูล แสง</h4>
+                    <h5 class="text-center"></h5>
+                    <div class="box box1">
+                  <h3 id ="dataLight"></h3>
+                  </div>
+                </div>
+                </div>
+                <div class="col-sm-6 mb-3">
+                  <div class="text-center">
+                <h4>ข้อมูล แก๊ส</h4>
+                    <h5 class="text-center"></h5>
+                    <div class="box box6" >
+                  <h3  id ="gasdata"></h3>
+                  </div>
+                </div>
+                </div>
+
+               
+              </div>
+            
+            </div>
+         
+        </div>
+      </div>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/7.19.1/firebase-app.js"></script>
+
+
+    <script src="https://www.gstatic.com/firebasejs/7.19.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.19.1/firebase-database.js"></script>
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+			 https://firebase.google.com/docs/web/setup#available-libraries -->
+    <script src="https://www.gstatic.com/firebasejs/7.19.1/firebase-analytics.js"></script>
+
+    <script>
+      //<!-- ส่วนนี้นำมาจาก Project setting >> general -->
+      var firebaseConfig = {
+		apiKey: "AIzaSyALlLG7jERflu8nKjBukf3cOSdBg8zwrEk",
+			authDomain: "my-sensors-a3da1.firebaseapp.com",
+			databaseURL: "https://my-sensors-a3da1-default-rtdb.firebaseio.com",
+			projectId: "my-sensors-a3da1",
+			storageBucket: "my-sensors-a3da1.appspot.com",
+			messagingSenderId: "325027535768",
+			appId: "1:325027535768:web:14b1e785ff27a6b8d5e9ed",
+			measurementId: "G-FZFHKSZRSS"
+      };
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      firebase.analytics();
+
+      //<!-- กำหนดค่าเริ่มต้นให้ chart -->
+      //initial chart
+      
+      var myVar = setInterval(updateDataFunc, 2000);
+
+      function updateDataFunc() {
+      //  window.myLine.update();
+        firebase                   //เอาข้อมูลเรียกจากแถวสุดท้าย
+          .database().ref("GAS").limitToLast(1).once("value") 
+          .then(function (snapshot) {
+            var p = snapshot.val(); //Light
+            for (var key of Object.keys(p)) {
+              var p2 = p[key]; //-M-xxxxxxx
+           //   console.log(p2.gas)
+              document.getElementById("gasdata").innerHTML = 'ปริมาณ แก๊ส : '+ p2.gas +' ppm';
+              document.getElementById("timeData").innerHTML = 'เวลา : '+ p2.datetime;
+              for (var key2 of Object.keys(p2)) {
+              }
+            }
+          });
+
+          firebase
+          .database().ref("Light").limitToLast(1).once("value") 
+          .then(function (snapshot) {
+            var p = snapshot.val(); //Light
+            for (var key of Object.keys(p)) {
+              var p2 = p[key]; //-M-xxxxxxx
+              //console.log(p2.gas)
+              document.getElementById("dataLight").innerHTML = 'ปริมาณ แสง : '+ p2.light + ' luk';
+              for (var key2 of Object.keys(p2)) {
+              }
+            }
+          });
+
+          firebase
+          .database().ref("sensorProject").limitToLast(1).once("value") 
+          .then(function (snapshot) {
+            var p = snapshot.val(); //Light
+            for (var key of Object.keys(p)) {
+              var p2 = p[key]; //-M-xxxxxxx
+              //console.log(p2.Humiduty)
+              document.getElementById("dataHumiduty").innerHTML = 'ความชื้น : '+ p2.Humiduty + ' %';
+              document.getElementById("dataTemp").innerHTML = 'อุณหภูมิ : '+ p2.TemperatureC + ' °C';
+              for (var key2 of Object.keys(p2)) {
+              }
+            }
+          });
+          
+         
+          
+      }
+    </script>
+
+    <!-- chart size -->
+    
+    <br />
+    <br />
+  </body>
+</html>

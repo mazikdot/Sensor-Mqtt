@@ -1,11 +1,11 @@
 #include <ESP8266WiFi.h>    // WiFi
 #include <PubSubClient.h>   // MQTT client
 
-#define WIFI_STA_NAME "MAD"    //hot spot ของไวไฟ ที่แชร์จากมือถือ
-#define WIFI_STA_PASS "madmadmad"
+#define WIFI_STA_NAME "ASDQWEOJJ"    //hot spot ของไวไฟ ที่แชร์จากมือถือ
+#define WIFI_STA_PASS "mazikdot"
 
 //MQTT protocol
-#define MQTT_SERVER   "35.222.171.55"   //ip server ของคุณ
+#define MQTT_SERVER   "34.122.238.71"   //ip server ของคุณ
 #define MQTT_PORT     1883
 #define MQTT_USERNAME "mad"    //user mqtt ที่คุณสร้าง
 #define MQTT_PASSWORD "1150"
@@ -123,7 +123,7 @@ void loop() {
 
   //ทดลอง publish ทุกๆ 3 วินาที
   //Send publish to MQTT Broker
-  sprintf(msg, "%ld : cm", distance);
+  //sprintf(msg, "%ld : cm", distance);
   mqtt.publish("/device001/hello",msg);
   delay(delays);
 

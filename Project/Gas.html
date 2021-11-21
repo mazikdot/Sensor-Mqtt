@@ -1,0 +1,253 @@
+<html>
+  <head>
+    <!-- Chartjs -->
+    <title>IoT Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+    <script src="utils.js"></script>
+    <style>
+      canvas {
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+      }
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">โปรเจคโรงงานอุตสหกรรม</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                   
+                    <button class="btn btn-primary"> <a class="nav-link active" aria-current="page" href="DataSensorLast.html" style="color:white;">ข้อมูล อุณภูมิ ความชื้น แสง แก๊ส</a></button>
+                  </li>
+                  <li class="nav-item">
+                    <button class="btn btn-success"> <a class="nav-link active" aria-current="page" href="Project.html" style="color:white;">กราฟ อุณหภูมิ ความชื้น (Line Chart)</a></button>
+                  </li>
+                  <li class="nav-item">
+                    <button class="btn btn-danger"> <a class="nav-link active" aria-current="page" href="Light.html" style="color:white;">กราฟของแสง (Line Chart)</a></button>
+                  </li>
+                  <li class="nav-item">
+                    <button class="btn btn-warning"> <a class="nav-link active" aria-current="page" href="Gas.html" style="color:white;">กราฟของแก๊ส (Line Chart)</a></button>
+                  </li>
+              </ul>
+          <form class="d-flex">
+            <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-success" type="submit">Search</button>
+          </form>
+        </div>
+      </div>
+    </nav>
+    
+    <script src="https://www.gstatic.com/firebasejs/7.19.1/firebase-app.js"></script>
+
+
+    <script src="https://www.gstatic.com/firebasejs/7.19.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.19.1/firebase-database.js"></script>
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+			 https://firebase.google.com/docs/web/setup#available-libraries -->
+    <script src="https://www.gstatic.com/firebasejs/7.19.1/firebase-analytics.js"></script>
+
+    <script>
+      //<!-- ส่วนนี้นำมาจาก Project setting >> general -->
+      var firebaseConfig = {
+		apiKey: "AIzaSyALlLG7jERflu8nKjBukf3cOSdBg8zwrEk",
+			authDomain: "my-sensors-a3da1.firebaseapp.com",
+			databaseURL: "https://my-sensors-a3da1-default-rtdb.firebaseio.com",
+			projectId: "my-sensors-a3da1",
+			storageBucket: "my-sensors-a3da1.appspot.com",
+			messagingSenderId: "325027535768",
+			appId: "1:325027535768:web:14b1e785ff27a6b8d5e9ed",
+			measurementId: "G-FZFHKSZRSS"
+      };
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      firebase.analytics();
+
+      //<!-- กำหนดค่าเริ่มต้นให้ chart -->
+      //initial chart
+      firebase
+        .database()
+        .ref("GAS")
+        .limitToLast(100)
+        .once("value") //<!-- ดึงข้อมูลจาก firebase 100 ค่า ที่ใหม่สุด -->
+        .then(function (snapshot) {
+        
+          config.data.labels.splice(0); // remove the label first
+          config.data.datasets.forEach(function (dataset) {
+            dataset.data.splice(0);
+          });
+
+         
+          var p = snapshot.val(); //Light
+          for (var key of Object.keys(p)) {
+          
+            var p2 = p[key]; //-M-xxxxxxx
+            for (var key2 of Object.keys(p2)) {
+              
+              if (key2 == "gas") {
+               // console.log(p2[key2])
+                config.data.datasets[0].data.push(p2[key2]); 
+              } 
+              else if (key2 == "datetime") {
+                config.data.labels.push(p2[key2]); 
+              }
+
+
+              
+            }
+            window.myLine.update(); 
+          }
+        });
+      var myVar = setInterval(updateDataFunc, 2000);
+
+      function updateDataFunc() {
+      //  window.myLine.update();
+        firebase
+          .database().ref("GAS").limitToLast(1).once("value") 
+          .then(function (snapshot) {
+          
+            
+            var t = 0,
+              h = 0,
+              w = 0;
+           
+            document
+              .getElementById("removeData").addEventListener("click", function () {
+                config.data.labels.splice(0, 100); // remove the label first
+
+                config.data.datasets.forEach(function (dataset) {
+                  dataset.data.pop();
+                });
+
+                window.myLine.update();
+              });
+
+            document.getElementById("remove").addEventListener("click", function () {
+                config.data.labels.splice(0,100);
+                firebase.database().ref("GAS").remove();
+
+
+                window.myLine.update();
+              });
+
+            var p = snapshot.val(); //Light
+            for (var key of Object.keys(p)) {
+              //Light/-M-xxxxxxx
+              //window.myLine.update();
+              var p2 = p[key]; //-M-xxxxxxx
+            
+              for (var key2 of Object.keys(p2)) {
+              //  console.log(key2)
+              if (key2 == "gas") {
+                //console.log(config.data.datasets[0])
+                config.data.datasets[0].data.push(p2[key2]); 
+              }
+              else if (key2 == "datetime") {
+                config.data.labels.push(p2[key2]); 
+              }
+              
+              }
+             window.myLine.update();
+            }
+            window.myLine.update();
+          });
+           window.myLine.update();
+      }
+    </script>
+
+    <!-- chart size -->
+    <div style="width: 75%">
+      <canvas id="canvas"></canvas>
+    </div>
+    <script>
+      //random line color
+      //<!-- กำหนดสีเส้น โดยการ random -->
+      var dynamicColors = function () {
+        var r = Math.floor(Math.random() * 255);
+        var g = Math.floor(Math.random() * 255);
+        var b = Math.floor(Math.random() * 255);
+        var a = Math.floor(Math.random() * 255);
+        return "rgba(" + r + "," + g + "," + b + "," + a + ")";
+      };
+      var randColors = [
+        dynamicColors(),
+        dynamicColors(),
+        dynamicColors(),
+        dynamicColors(),
+        dynamicColors(),
+        dynamicColors(),
+      ];
+
+      // <!-- ตั้งค่า chart -->
+      var config = {
+        type: "line", //<!-- กำหนดชนิด chart -->
+        data: {
+          labels: [], //<!-- ค่าเริ่มต้นในแนวแกนนอน -->
+          datasets: [
+            {
+              //<!-- ชุดข้อมูล ชุดที่ 0 -->
+              label: "แก๊ซ", //<!-- ชื่อชุดข้อมูล ชุดที่ 0 ที่แสดงด้านบน chart -->
+              backgroundColor: randColors[0],
+              borderColor: randColors[0],
+              data: [],
+              fill: false,
+            }
+         
+          ],
+        },
+        options: {
+          responsive: true,
+          title: {
+            display: true,
+            text: "Chart.js: My IoT Line Chart", //<!-- ชื่อ chart ที่แสดงด้านบนสุด -->
+          },
+          tooltips: {
+            mode: "index",
+            intersect: false,
+          },
+          hover: {
+            mode: "nearest",
+            intersect: true,
+          },
+          scales: {
+            xAxes: [
+              {
+                display: true,
+                scaleLabel: {
+                  display: true,
+                  labelString: "Date & Time", //<!-- ชื่อแกนแนวนอน ด้านล่าง -->
+                },
+              },
+            ],
+            yAxes: [
+              {
+                display: true,
+                scaleLabel: {
+                  display: true,
+                  labelString: "Value", //<!-- ชื่อแกนแนวตั้ง ด้านซ้าย -->
+                },
+              },
+            ],
+          },
+        },
+      };
+
+      window.onload = function () {
+        var ctx = document.getElementById("canvas").getContext("2d");
+        window.myLine = new Chart(ctx, config);
+      };
+    </script>
+    <br />
+    <br />
+    <button class="btn btn-danger" id="removeData">Remove Data</button>
+    <!-- ลบข้อมูล 1 จุดใน chart ปัจจุบัน -->
+    <button class="btn btn-danger"id="remove">Remove Data in Firebase</button>
+  </body>
+</html>
